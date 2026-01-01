@@ -1,0 +1,464 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Yard Material Visualizer</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 600px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+            padding: 30px;
+        }
+
+        h1 {
+            color: #333;
+            text-align: center;
+            margin-bottom: 10px;
+            font-size: 24px;
+        }
+
+        .subtitle {
+            text-align: center;
+            color: #666;
+            margin-bottom: 30px;
+            font-size: 14px;
+        }
+
+        .upload-section {
+            margin-bottom: 25px;
+        }
+
+        .upload-label {
+            display: block;
+            font-weight: 600;
+            color: #444;
+            margin-bottom: 10px;
+            font-size: 16px;
+        }
+
+        .upload-box {
+            border: 3px dashed #667eea;
+            border-radius: 15px;
+            padding: 30px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.3s;
+            background: #f8f9ff;
+        }
+
+        .upload-box:hover {
+            border-color: #764ba2;
+            background: #f0f1ff;
+        }
+
+        .upload-box.has-image {
+            border-color: #10b981;
+            background: #f0fdf4;
+        }
+
+        .upload-icon {
+            font-size: 48px;
+            margin-bottom: 10px;
+        }
+
+        .upload-text {
+            color: #666;
+            font-size: 14px;
+        }
+
+        input[type="file"] {
+            display: none;
+        }
+
+        .preview-image {
+            max-width: 100%;
+            max-height: 200px;
+            margin-top: 15px;
+            border-radius: 10px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+        }
+
+        .generate-btn {
+            width: 100%;
+            padding: 18px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            border-radius: 12px;
+            font-size: 18px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: transform 0.2s, box-shadow 0.2s;
+            margin-top: 20px;
+        }
+
+        .generate-btn:hover:not(:disabled) {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 25px rgba(102, 126, 234, 0.4);
+        }
+
+        .generate-btn:disabled {
+            background: #ccc;
+            cursor: not-allowed;
+        }
+
+        .loading {
+            text-align: center;
+            padding: 30px;
+            display: none;
+        }
+
+        .loading.active {
+            display: block;
+        }
+
+        .spinner {
+            border: 4px solid #f3f3f3;
+            border-top: 4px solid #667eea;
+            border-radius: 50%;
+            width: 50px;
+            height: 50px;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 15px;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .result-section {
+            margin-top: 30px;
+            display: none;
+        }
+
+        .result-section.active {
+            display: block;
+        }
+
+        .result-image {
+            width: 100%;
+            border-radius: 15px;
+            box-shadow: 0 8px 24px rgba(0,0,0,0.2);
+            margin-bottom: 20px;
+        }
+
+        .download-btn {
+            width: 100%;
+            padding: 15px;
+            background: #10b981;
+            color: white;
+            border: none;
+            border-radius: 12px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: background 0.3s;
+        }
+
+        .download-btn:hover {
+            background: #059669;
+        }
+
+        .error {
+            background: #fee;
+            border: 2px solid #f88;
+            border-radius: 10px;
+            padding: 15px;
+            color: #c33;
+            margin-top: 20px;
+            display: none;
+        }
+
+        .error.active {
+            display: block;
+        }
+
+        .reset-btn {
+            width: 100%;
+            padding: 12px;
+            background: #6b7280;
+            color: white;
+            border: none;
+            border-radius: 12px;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            margin-top: 10px;
+        }
+
+        .reset-btn:hover {
+            background: #4b5563;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🏡 Yard Material Visualizer</h1>
+        <p class="subtitle">Visualize materials on your yard in seconds</p>
+
+        <div class="upload-section">
+            <label class="upload-label">1️⃣ Material/Texture Photo</label>
+            <div class="upload-box" id="materialBox" onclick="document.getElementById('materialInput').click()">
+                <div class="upload-icon">📸</div>
+                <div class="upload-text">Tap to upload material photo</div>
+            </div>
+            <input type="file" id="materialInput" accept="image/*" capture="environment">
+            <img id="materialPreview" class="preview-image" style="display: none;">
+        </div>
+
+        <div class="upload-section">
+            <label class="upload-label">2️⃣ Yard/Landscape Photo</label>
+            <div class="upload-box" id="yardBox" onclick="document.getElementById('yardInput').click()">
+                <div class="upload-icon">🏞️</div>
+                <div class="upload-text">Tap to upload yard photo</div>
+            </div>
+            <input type="file" id="yardInput" accept="image/*" capture="environment">
+            <img id="yardPreview" class="preview-image" style="display: none;">
+        </div>
+
+        <button class="generate-btn" id="generateBtn" disabled>Generate Visualization</button>
+
+        <div class="loading" id="loading">
+            <div class="spinner"></div>
+            <p id="loadingMessage">Uploading images...</p>
+            <p style="font-size: 12px; color: #666; margin-top: 10px;">This can take 30-180 seconds for complex scenes</p>
+        </div>
+
+        <div class="error" id="error"></div>
+
+        <div class="result-section" id="result">
+            <h2 style="margin-bottom: 15px; color: #333;">✨ Your Result</h2>
+            <img id="resultImage" class="result-image">
+            <button class="download-btn" id="downloadBtn">Download Image</button>
+            <button class="reset-btn" onclick="resetApp()">Start Over</button>
+        </div>
+    </div>
+
+    <script>
+        // ============================================================================
+        // YARD MATERIAL VISUALIZER
+        // ============================================================================
+        // This app works with your Cloudflare Worker proxy at:
+        // https://caldg-ai-proxy.nickscarmozzino.workers.dev/
+        //
+        // The worker handles:
+        // - Authentication with fal.ai
+        // - Submitting the job
+        // - Polling for results (up to 180 seconds)
+        // - Returning the final image
+        //
+        // This app just needs to:
+        // 1. Compress images to data URIs
+        // 2. Send them to the worker
+        // 3. Wait for the response
+        // ============================================================================
+        
+        let materialImage = null;
+        let yardImage = null;
+        let resultUrl = null;
+
+        // Handle material image upload
+        document.getElementById('materialInput').addEventListener('change', function(e) {
+            const file = e.target.files[0];
+            if (file) {
+                materialImage = file;
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    document.getElementById('materialPreview').src = e.target.result;
+                    document.getElementById('materialPreview').style.display = 'block';
+                    document.getElementById('materialBox').classList.add('has-image');
+                };
+                reader.readAsDataURL(file);
+                checkReadyToGenerate();
+            }
+        });
+
+        // Handle yard image upload
+        document.getElementById('yardInput').addEventListener('change', function(e) {
+            const file = e.target.files[0];
+            if (file) {
+                yardImage = file;
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    document.getElementById('yardPreview').src = e.target.result;
+                    document.getElementById('yardPreview').style.display = 'block';
+                    document.getElementById('yardBox').classList.add('has-image');
+                };
+                reader.readAsDataURL(file);
+                checkReadyToGenerate();
+            }
+        });
+
+        function checkReadyToGenerate() {
+            const btn = document.getElementById('generateBtn');
+            if (materialImage && yardImage) {
+                btn.disabled = false;
+            }
+        }
+
+        // Convert and optimize image to data URI
+        async function fileToDataUri(file, maxWidth = 1920) {
+            return new Promise((resolve, reject) => {
+                const img = new Image();
+                const canvas = document.createElement('canvas');
+                const ctx = canvas.getContext('2d');
+                
+                img.onload = () => {
+                    // Calculate new dimensions
+                    let width = img.width;
+                    let height = img.height;
+                    
+                    if (width > maxWidth) {
+                        height = (height / width) * maxWidth;
+                        width = maxWidth;
+                    }
+                    
+                    // Set canvas size and draw
+                    canvas.width = width;
+                    canvas.height = height;
+                    ctx.drawImage(img, 0, 0, width, height);
+                    
+                    // Convert to data URI with quality compression
+                    const dataUri = canvas.toDataURL('image/jpeg', 0.85);
+                    resolve(dataUri);
+                };
+                
+                img.onerror = reject;
+                
+                const reader = new FileReader();
+                reader.onload = (e) => {
+                    img.src = e.target.result;
+                };
+                reader.onerror = reject;
+                reader.readAsDataURL(file);
+            });
+        }
+
+        // Generate visualization
+        document.getElementById('generateBtn').addEventListener('click', async function() {
+            try {
+                // Hide error, show loading
+                document.getElementById('error').classList.remove('active');
+                document.getElementById('loading').classList.add('active');
+                document.getElementById('result').classList.remove('active');
+                this.disabled = true;
+
+                console.log('🔄 Processing images...');
+                document.getElementById('loadingMessage').textContent = 'Processing images...';
+                
+                // Convert images to optimized data URIs
+                const materialDataUri = await fileToDataUri(materialImage);
+                const yardDataUri = await fileToDataUri(yardImage);
+                
+                console.log('✅ Images processed, sending to API...');
+                document.getElementById('loadingMessage').textContent = 'Generating visualization...';
+
+                // Call fal.ai API through proxy (worker handles the routing internally)
+                const response = await fetch('https://caldg-ai-proxy.nickscarmozzino.workers.dev/', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        prompt: "Apply the material texture from the first image to cover the yard area in the second image. Make it look realistic and natural, as if the material has been professionally installed. Keep the house, landscaping rocks, and other elements unchanged - only replace the dirt/soil areas with the new material texture.",
+                        image_urls: [materialDataUri, yardDataUri]
+                    })
+                });
+
+                if (!response.ok) {
+                    const errorText = await response.text();
+                    console.error('API Error Response:', errorText);
+                    throw new Error(`API Error: ${response.status} - Check console for details`);
+                }
+
+                const data = await response.json();
+                console.log('📦 API Response:', data);
+                
+                // Worker returns { success: true, images: [...] }
+                if (data.success && data.images && data.images.length > 0) {
+                    console.log('✅ Result ready');
+                    displayResult(data);
+                } else if (data.error) {
+                    throw new Error(data.error);
+                } else {
+                    throw new Error('No images in response');
+                }
+
+            } catch (error) {
+                console.error('❌ Error:', error);
+                document.getElementById('error').textContent = `Error: ${error.message}`;
+                document.getElementById('error').classList.add('active');
+                document.getElementById('loading').classList.remove('active');
+                this.disabled = false;
+            }
+        });
+
+        function displayResult(data) {
+            document.getElementById('loading').classList.remove('active');
+            document.getElementById('result').classList.add('active');
+            
+            // Worker returns { success: true, images: [...] }
+            const imageUrl = data.images[0].url;
+            
+            resultUrl = imageUrl;
+            document.getElementById('resultImage').src = imageUrl;
+            console.log('✅ Image displayed:', imageUrl);
+        }
+
+        // Download result
+        document.getElementById('downloadBtn').addEventListener('click', async function() {
+            if (resultUrl) {
+                try {
+                    const response = await fetch(resultUrl);
+                    const blob = await response.blob();
+                    const url = window.URL.createObjectURL(blob);
+                    const a = document.createElement('a');
+                    a.href = url;
+                    a.download = `yard-visualization-${Date.now()}.png`;
+                    document.body.appendChild(a);
+                    a.click();
+                    window.URL.revokeObjectURL(url);
+                    document.body.removeChild(a);
+                } catch (error) {
+                    // Fallback: open in new tab
+                    window.open(resultUrl, '_blank');
+                }
+            }
+        });
+
+        function resetApp() {
+            materialImage = null;
+            yardImage = null;
+            resultUrl = null;
+            
+            document.getElementById('materialInput').value = '';
+            document.getElementById('yardInput').value = '';
+            document.getElementById('materialPreview').style.display = 'none';
+            document.getElementById('yardPreview').style.display = 'none';
+            document.getElementById('materialBox').classList.remove('has-image');
+            document.getElementById('yardBox').classList.remove('has-image');
+            document.getElementById('generateBtn').disabled = true;
+            document.getElementById('result').classList.remove('active');
+            document.getElementById('error').classList.remove('active');
+        }
+    </script>
+</body>
+</html>
